@@ -5,7 +5,7 @@
 .*.sw[a-z]
 .coverage
 .tox
-.venv-touch
+.venv.touch
 /.cache
 /build
 /venv*

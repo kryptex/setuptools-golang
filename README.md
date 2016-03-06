@@ -6,6 +6,10 @@ setuptools-golang
 
 A setuptools extension for building cpython extensions written in golang.
 
+## Requirements
+
+This requires golang >= 1.5 to be installed on your system.
+
 ## Usage
 
 Add `setuptools-golang` to the `setup_requires` in your setup.py and

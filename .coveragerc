@@ -1,7 +1,8 @@
 [run]
+parallel = True
 branch = True
-source =
-    .
+source = $TOP
+data_file = $TOP/.coverage
 omit =
     .tox/*
     /usr/*

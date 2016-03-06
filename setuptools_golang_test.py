@@ -1,15 +1,152 @@
+from __future__ import unicode_literals
+
+import collections
+import os
+import subprocess
+import sys
+
+import pytest
 from setuptools.dist import Distribution
 
 import setuptools_golang
 
 
+xfailif_pypy = pytest.mark.xfail(
+    setuptools_golang.PYPY, reason='pypy is a special snowflake',
+)
+
+
+@pytest.fixture(autouse=True, scope='session')
+def enable_coverage_subprocesses():
+    here = os.path.dirname(os.path.abspath(__file__))
+    os.environ['TOP'] = here
+    os.environ['COVERAGE_PROCESS_START'] = os.path.join(here, '.coveragerc')
+
+
+def auto_namedtuple(**kwargs):
+    return collections.namedtuple('auto_namedtuple', kwargs.keys())(**kwargs)
+
+
+def run(*cmd, **kwargs):
+    returncode = kwargs.pop('returncode', 0)
+    proc = subprocess.Popen(cmd, **kwargs)
+    out, err = proc.communicate()
+    out = out.decode('UTF-8') if out is not None else None
+    err = err.decode('UTF-8') if err is not None else None
+    if returncode is not None:
+        if proc.returncode != returncode:
+            raise AssertionError(
+                '{!r} returned {} (expected {})\nout:\n{}err:\n{}'.format(
+                    cmd, proc.returncode, returncode, out, err,
+                )
+            )
+    return auto_namedtuple(returncode=proc.returncode, out=out, err=err)
+
+
+def run_output(*cmd, **kwargs):
+    return run(*cmd, stdout=subprocess.PIPE, **kwargs).out
+
+
 def test_sets_cmdclass():
     dist = Distribution()
     setuptools_golang.set_build_ext(dist, 'build_golang', True)
-    assert dist.cmdclass['build_ext'] == setuptools_golang.BuildExtGolang
+    assert dist.cmdclass['build_ext'] == setuptools_golang.build_ext
 
 
 def test_sets_cmdclass_value_falsey():
     dist = Distribution()
     setuptools_golang.set_build_ext(dist, 'build_golang', False)
-    assert dist.cmdclass.get('build_ext') != setuptools_golang.BuildExtGolang
+    assert dist.cmdclass.get('build_ext') != setuptools_golang.build_ext
+
+
+GET_LDFLAGS = (
+    'import distutils.spawn;'
+    "print(bool(distutils.spawn.find_executable('pkg-config')));"
+    'import setuptools_golang;'
+    'print(setuptools_golang._get_ldflags());'
+)
+
+
+@xfailif_pypy
+def test_from_pkg_config():
+    output = run_output(sys.executable, '-c', GET_LDFLAGS)
+    assert output.startswith('True\n')
+    assert '-lpython' in output
+
+
+@xfailif_pypy
+def test_no_pkg_config():
+    # Blank PATH so we don't have pkg-config
+    env = dict(os.environ, PATH='')
+    output = run_output(sys.executable, '-c', GET_LDFLAGS, env=env)
+    assert output.startswith('False\n')
+    assert '-lpython' in output
+
+
+@pytest.yield_fixture(scope='session')
+def venv(tmpdir_factory):
+    """A shared virtualenv fixture, be careful not to install two of the same
+    package into this -- or sadness...
+    """
+    venv = tmpdir_factory.mktemp('venv').join('venv')
+    pip = venv.join('bin/pip').strpath
+    python = venv.join('bin/python').strpath
+    # Make sure this virtualenv has the same executable
+    run('virtualenv', venv.strpath, '-p', sys.executable)
+    # Install this so we can get coverage
+    run(pip, 'install', 'coverage-enable-subprocess')
+    # Install us!
+    run(pip, 'install', '-e', '.')
+    yield auto_namedtuple(venv=venv, pip=pip, python=python)
+
+
+SUM = 'import {0}; print({0}.sum(1, 2))'
+
+
+@pytest.mark.parametrize(
+    ('pkg', 'mod'),
+    (
+        ('testing/sum', 'sum'),
+        ('testing/sum_pure_go', 'sum_pure_go'),
+        ('testing/sum_sub_package', 'sum_sub_package.sum'),
+    ),
+)
+def test_sum_integration(venv, pkg, mod):
+    run(venv.pip, 'install', '-v', pkg)
+    out = run_output(venv.python, '-c', SUM.format(mod))
+    assert out == '3\n'
+
+
+HELLO_WORLD = 'import project_with_c; print(project_with_c.hello_world())'
+
+
+def test_integration_project_with_c(venv):
+    test_sum_integration(
+        venv, 'testing/project_with_c', 'project_with_c_sum.sum',
+    )
+    out = run_output(venv.python, '-c', HELLO_WORLD)
+    assert out == 'hello world\n'
+
+
+def test_integration_notfound(venv):
+    ret = run(
+        venv.pip, 'install', 'testing/notfound',
+        returncode=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
+    assert ret.returncode != 0
+    assert (
+        'Error building extension `notfound`: notfound.go does not exist' in
+        ret.out
+    )
+
+
+def test_integration_multidir(venv):
+    ret = run(
+        venv.pip, 'install', 'testing/multidir',
+        returncode=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
+    assert ret.returncode != 0
+    assert (
+        'Error building extension `multidir`: '
+        'Cannot compile across directories: dir1 dir2' in ret.out
+    )
