@@ -1,16 +1,23 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import contextlib
 import distutils.sysconfig
 import os
 import pipes
+import shutil
 import subprocess
 import sys
+import tempfile
 
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
 PYPY = '__pypy__' in sys.builtin_module_names
+
+
+def _get_cflags(compiler):
+    return ' '.join('-I{}'.format(p) for p in compiler.include_dirs)
 
 
 def _get_ldflags_pypy():
@@ -60,6 +67,15 @@ def _print_cmd(env, cmd):
     )
 
 
+@contextlib.contextmanager
+def _tmpdir():
+    tempdir = tempfile.mkdtemp()
+    try:
+        yield tempdir
+    finally:
+        shutil.rmtree(tempdir)
+
+
 class build_ext(_build_ext):
     def build_extension(self, ext):
         # If there are no .go files then the parent should handle this
@@ -88,20 +104,32 @@ class build_ext(_build_ext):
         source_dir, = source_dirs
         source_dir = os.path.abspath(source_dir)
 
-        env = {
-            'CGO_CFLAGS': ' '.join(
-                '-I{}'.format(p) for p in self.compiler.include_dirs
-            ),
-            'CGO_LDFLAGS': _get_ldflags(),
-        }
-        cmd = (
-            'go', 'build', '-buildmode=c-shared',
-            '-o', os.path.abspath(self.get_ext_fullpath(ext.name)),
-        )
-        _print_cmd(env, cmd)
-        subprocess.check_call(
-            cmd, cwd=source_dir, env=dict(os.environ, **env),
-        )
+        # Copy the package into a temporary GOPATH environment
+        with _tmpdir() as tempdir:
+            srcdir = os.path.join(tempdir, 'src')
+            os.mkdir(srcdir)
+            pkg_path = os.path.join(srcdir, '_mypkg')
+            shutil.copytree(source_dir, pkg_path)
+
+            env = {
+                'GOPATH': tempdir,
+                'CGO_CFLAGS': _get_cflags(self.compiler),
+                'CGO_LDFLAGS': _get_ldflags(),
+            }
+            cmd_get = ('go', 'get')
+            _print_cmd(env, cmd_get)
+            subprocess.check_call(
+                cmd_get, cwd=pkg_path, env=dict(os.environ, **env),
+            )
+
+            cmd_build = (
+                'go', 'build', '-buildmode=c-shared',
+                '-o', os.path.abspath(self.get_ext_fullpath(ext.name)),
+            )
+            _print_cmd(env, cmd_build)
+            subprocess.check_call(
+                cmd_build, cwd=pkg_path, env=dict(os.environ, **env),
+            )
 
 
 def set_build_ext(dist, attr, value):
