@@ -4,8 +4,8 @@ from setuptools import setup
 
 setup(
     name='sum_pure_go',
-    ext_modules=[Extension('sum_pure_go', ['sum.go', 'sum_support.go'])],
-    build_golang=True,
+    ext_modules=[Extension('sum_pure_go', ['sum.go'])],
+    build_golang={'root': 'github.com/asottile/fake'},
     # Would do this, but we're testing *our* implementation and this would
     # install from pypi.  We can rely on setuptools-golang being already
     # installed under test.
