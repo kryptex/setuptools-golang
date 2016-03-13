@@ -21,7 +21,9 @@ Add `setuptools-golang` to the `setup_requires` in your setup.py and
 `build_golang={'root': ...}`.  `root` refers to the root go import path of
 your project.
 
-An extension must only contain a single file in the `main` go package.
+An extension must be a single file in the `main` go package (though the entire
+`main` package will be built into the extension).  That package may import
+other code.
 You may have multiple extensions in your `setup.py`.
 
 ```python
