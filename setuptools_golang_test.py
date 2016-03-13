@@ -36,7 +36,7 @@ def run(*cmd, **kwargs):
     if returncode is not None:
         if proc.returncode != returncode:
             raise AssertionError(
-                '{!r} returned {} (expected {})\nout:\n{}err:\n{}'.format(
+                '{!r} returned {} (expected {})\nout:\n{}\nerr:\n{}\n'.format(
                     cmd, proc.returncode, returncode, out, err,
                 )
             )
@@ -49,14 +49,11 @@ def run_output(*cmd, **kwargs):
 
 def test_sets_cmdclass():
     dist = Distribution()
-    setuptools_golang.set_build_ext(dist, 'build_golang', True)
-    assert dist.cmdclass['build_ext'] == setuptools_golang.build_ext
-
-
-def test_sets_cmdclass_value_falsey():
-    dist = Distribution()
-    setuptools_golang.set_build_ext(dist, 'build_golang', False)
-    assert dist.cmdclass.get('build_ext') != setuptools_golang.build_ext
+    assert not dist.cmdclass.get('build_ext')
+    setuptools_golang.set_build_ext(
+        dist, 'build_golang', {'root': 'github.com/asottile/fake'},
+    )
+    assert dist.cmdclass['build_ext']
 
 
 GET_LDFLAGS = (
@@ -157,5 +154,14 @@ def test_integration_multidir(venv):
     assert ret.returncode != 0
     assert (
         'Error building extension `multidir`: '
-        'Cannot compile across directories: dir1 dir2' in ret.out
+        'sources must be a single file in the `main` package.' in ret.out
     )
+
+
+OHAI = 'import hello_lib; print(hello_lib.ohai(u"Anthony"))'
+
+
+def test_integration_internal_imports(venv):
+    run(venv.pip, 'install', 'testing/internal_imports')
+    out = run_output(venv.python, '-c', OHAI)
+    assert out == 'ohai, Anthony\n'

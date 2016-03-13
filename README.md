@@ -18,12 +18,17 @@ It is incompatible with pypy3 (for now) due to a lack of c-api.
 ## Usage
 
 Add `setuptools-golang` to the `setup_requires` in your setup.py and
-`build_golang=True`.
+`build_golang={'root': ...}`.  `root` refers to the root go import path of
+your project.
+
+An extension must only contain a single file in the `main` go package.
+You may have multiple extensions in your `setup.py`.
 
 ```python
 setup(
     ...
-    build_golang=True,
+    build_golang={'root': 'github.com/user/project'},
+    ext_modules=[Extension('example', ['example.go'])],
     setup_requires=['setuptools-golang'],
     ...
 )

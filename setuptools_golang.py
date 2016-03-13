@@ -76,40 +76,35 @@ def _tmpdir():
         shutil.rmtree(tempdir)
 
 
-class build_ext(_build_ext):
+def _get_build_extension_method(base, root):
     def build_extension(self, ext):
+        def _raise_error(msg):
+            raise IOError(
+                'Error building extension `{}`: '.format(ext.name) + msg,
+            )
+
         # If there are no .go files then the parent should handle this
         if not any(source.endswith('.go') for source in ext.sources):
-            return _build_ext.build_extension(self, ext)
+            return base.build_extension(self, ext)
 
-        for source in ext.sources:
-            if not os.path.exists(source):
-                raise IOError(
-                    'Error building extension `{}`: {} does not exist'.format(
-                        ext.name, source,
-                    ),
-                )
-
-        # Passing non-.go files to `go build` results in a failure
-        # Passing only .go files to `go build` causes it to ignore C files
-        # So we'll set our cwd to the root of the files and go from there!
-        source_dirs = {os.path.dirname(src) for src in ext.sources}
-        if len(source_dirs) != 1:
-            raise IOError(
-                'Error building extension `{}`: '
-                'Cannot compile across directories: {}'.format(
-                    ext.name, ' '.join(sorted(source_dirs)),
-                )
+        if len(ext.sources) != 1:
+            _raise_error(
+                'sources must be a single file in the `main` package.\n'
+                'Recieved: {!r}'.format(ext.sources)
             )
-        source_dir, = source_dirs
-        source_dir = os.path.abspath(source_dir)
+
+        main_file, = ext.sources
+        if not os.path.exists(main_file):
+            _raise_error('{} does not exist'.format(main_file))
+        main_dir = os.path.dirname(main_file)
 
         # Copy the package into a temporary GOPATH environment
         with _tmpdir() as tempdir:
-            srcdir = os.path.join(tempdir, 'src')
-            os.mkdir(srcdir)
-            pkg_path = os.path.join(srcdir, '_mypkg')
-            shutil.copytree(source_dir, pkg_path)
+            root_path = os.path.join(tempdir, 'src', root)
+            # Make everything but the last directory (copytree interface)
+            os.makedirs(os.path.dirname(root_path))
+            shutil.copytree('.', root_path)
+            pkg_path = os.path.join(root_path, main_dir)
 
             env = {
                 'GOPATH': tempdir,
@@ -131,8 +126,17 @@ class build_ext(_build_ext):
                 cmd_build, cwd=pkg_path, env=dict(os.environ, **env),
             )
 
+    return build_extension
+
+
+def _get_build_ext_cls(base, root):
+    class build_ext(base):
+        build_extension = _get_build_extension_method(base, root)
+
+    return build_ext
+
 
 def set_build_ext(dist, attr, value):
-    if not value:
-        return
-    dist.cmdclass['build_ext'] = build_ext
+    root = value['root']
+    base = dist.cmdclass.get('build_ext', _build_ext)
+    dist.cmdclass['build_ext'] = _get_build_ext_cls(base, root)

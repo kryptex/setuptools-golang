@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
     name='imports-gh',
     ext_modules=[Extension('red', ['red.go'])],
-    build_golang=True,
+    build_golang={'root': 'github.com/asottile/fake'},
     # Would do this, but we're testing *our* implementation and this would
     # install from pypi.  We can rely on setuptools-golang being already
     # installed under test.
