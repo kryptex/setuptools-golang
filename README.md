@@ -42,7 +42,7 @@ Here's some [examples](https://github.com/asottile/setuptools-golang-examples)
 
 ## Common issues
 
-### `undefined reference to \`some_c_function'`
+### ```undefined reference to `some_c_function'```
 
 `Extension` by default will bring along the go files listed, but won't bring
 along the related C files.  Add the following to `MANIFEST.in`:
