@@ -7,8 +7,7 @@ all: venv test
 venv: .venv.touch
 	tox -e venv $(REBUILD_FLAG)
 
-.PHONY: tests test
-tests: test
+.PHONY: test
 test: .venv.touch
 	tox $(REBUILD_FLAG)
 
@@ -18,7 +17,7 @@ test: .venv.touch
 
 .PHONY: clean
 clean:
-	find . -name '*.pyc' -delete
+	find -name '*.pyc' -delete
 	rm -rf .tox
 	rm -rf ./venv-*
 	rm -f .venv.touch

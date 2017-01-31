@@ -8,9 +8,9 @@ A setuptools extension for building cpython extensions written in golang.
 
 ## Requirements
 
-This requires golang >= 1.5.  It is currently tested against 1.5 and 1.6.
+This requires golang >= 1.5.  It is currently tested against 1.6 and 1.7.
 
-This requires python >= 2.7.  It is currently tested against 2.7, 3.4, 3.5,
+This requires python >= 2.7.  It is currently tested against 2.7, 3.5, 3.6,
 and pypy.
 
 It is incompatible with pypy3 (for now) due to a lack of c-api.
