@@ -11,11 +11,6 @@ from setuptools.dist import Distribution
 import setuptools_golang
 
 
-xfailif_pypy = pytest.mark.xfail(
-    setuptools_golang.PYPY, reason='pypy is a special snowflake',
-)
-
-
 @pytest.fixture(autouse=True, scope='session')
 def enable_coverage_subprocesses():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -54,30 +49,6 @@ def test_sets_cmdclass():
         dist, 'build_golang', {'root': 'github.com/asottile/fake'},
     )
     assert dist.cmdclass['build_ext']
-
-
-GET_LDFLAGS = (
-    'import distutils.spawn;'
-    "print(bool(distutils.spawn.find_executable('pkg-config')));"
-    'import setuptools_golang;'
-    'print(setuptools_golang._get_ldflags());'
-)
-
-
-@xfailif_pypy
-def test_from_pkg_config():
-    output = run_output(sys.executable, '-c', GET_LDFLAGS)
-    assert output.startswith('True\n')
-    assert '-lpython' in output
-
-
-@xfailif_pypy
-def test_no_pkg_config():
-    # Blank PATH so we don't have pkg-config
-    env = dict(os.environ, PATH='')
-    output = run_output(sys.executable, '-c', GET_LDFLAGS, env=env)
-    assert output.startswith('False\n')
-    assert '-lpython' in output
 
 
 @pytest.yield_fixture(scope='session')

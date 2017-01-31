@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import contextlib
-import distutils.sysconfig
 import os
 import pipes
 import shutil
@@ -13,47 +12,8 @@ import tempfile
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
-PYPY = '__pypy__' in sys.builtin_module_names
-
-
 def _get_cflags(compiler):
     return ' '.join('-I{}'.format(p) for p in compiler.include_dirs)
-
-
-def _get_ldflags_pypy():
-    if PYPY:  # pragma: no cover (pypy only)
-        return '-L{} -lpypy-c'.format(
-            os.path.dirname(os.path.realpath(sys.executable)),
-        )
-    else:
-        return None
-
-
-def _get_ldflags_pkg_config():
-    try:
-        return subprocess.check_output((
-            'pkg-config', '--libs',
-            'python-{}.{}'.format(*sys.version_info[:2]),
-        )).decode('UTF-8').strip()
-    except (subprocess.CalledProcessError, OSError):
-        return None
-
-
-def _get_ldflags_bldlibrary():
-    return distutils.sysconfig.get_config_var('BLDLIBRARY')
-
-
-def _get_ldflags():
-    for func in (
-            _get_ldflags_pypy,
-            _get_ldflags_pkg_config,
-            _get_ldflags_bldlibrary,
-    ):
-        ret = func()
-        if ret is not None:
-            return ret
-    else:
-        raise AssertionError('Could not determine ldflags!')
 
 
 def _check_call(cmd, cwd, env):
@@ -113,7 +73,7 @@ def _get_build_extension_method(base, root):
 
             env.update({
                 'CGO_CFLAGS': _get_cflags(self.compiler),
-                'CGO_LDFLAGS': _get_ldflags(),
+                'CGO_LDFLAGS': '-Wl,--unresolved-symbols=ignore-all',
             })
             cmd_build = (
                 'go', 'build', '-buildmode=c-shared',
