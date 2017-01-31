@@ -56,7 +56,7 @@ def _get_ldflags():
         raise AssertionError('Could not determine ldflags!')
 
 
-def _print_cmd(env, cmd):
+def _check_call(cmd, cwd, env):
     envparts = [
         '{}={}'.format(k, pipes.quote(v))
         for k, v in sorted(tuple(env.items()))
@@ -65,6 +65,7 @@ def _print_cmd(env, cmd):
         '$ {}'.format(' '.join(envparts + [pipes.quote(p) for p in cmd])),
         file=sys.stderr,
     )
+    subprocess.check_call(cmd, cwd=cwd, env=dict(os.environ, **env))
 
 
 @contextlib.contextmanager
@@ -106,25 +107,19 @@ def _get_build_extension_method(base, root):
             shutil.copytree('.', root_path)
             pkg_path = os.path.join(root_path, main_dir)
 
-            env = {
-                'GOPATH': tempdir,
+            env = {'GOPATH': tempdir}
+            cmd_get = ('go', 'get', '-d')
+            _check_call(cmd_get, cwd=pkg_path, env=env)
+
+            env.update({
                 'CGO_CFLAGS': _get_cflags(self.compiler),
                 'CGO_LDFLAGS': _get_ldflags(),
-            }
-            cmd_get = ('go', 'get')
-            _print_cmd(env, cmd_get)
-            subprocess.check_call(
-                cmd_get, cwd=pkg_path, env=dict(os.environ, **env),
-            )
-
+            })
             cmd_build = (
                 'go', 'build', '-buildmode=c-shared',
                 '-o', os.path.abspath(self.get_ext_fullpath(ext.name)),
             )
-            _print_cmd(env, cmd_build)
-            subprocess.check_call(
-                cmd_build, cwd=pkg_path, env=dict(os.environ, **env),
-            )
+            _check_call(cmd_build, cwd=pkg_path, env=env)
 
     return build_extension
 
