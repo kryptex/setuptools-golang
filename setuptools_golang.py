@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import contextlib
-import distutils.sysconfig
 import os
 import pipes
 import shutil
@@ -13,50 +12,11 @@ import tempfile
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
-PYPY = '__pypy__' in sys.builtin_module_names
-
-
 def _get_cflags(compiler):
     return ' '.join('-I{}'.format(p) for p in compiler.include_dirs)
 
 
-def _get_ldflags_pypy():
-    if PYPY:  # pragma: no cover (pypy only)
-        return '-L{} -lpypy-c'.format(
-            os.path.dirname(os.path.realpath(sys.executable)),
-        )
-    else:
-        return None
-
-
-def _get_ldflags_pkg_config():
-    try:
-        return subprocess.check_output((
-            'pkg-config', '--libs',
-            'python-{}.{}'.format(*sys.version_info[:2]),
-        )).decode('UTF-8').strip()
-    except (subprocess.CalledProcessError, OSError):
-        return None
-
-
-def _get_ldflags_bldlibrary():
-    return distutils.sysconfig.get_config_var('BLDLIBRARY')
-
-
-def _get_ldflags():
-    for func in (
-            _get_ldflags_pypy,
-            _get_ldflags_pkg_config,
-            _get_ldflags_bldlibrary,
-    ):
-        ret = func()
-        if ret is not None:
-            return ret
-    else:
-        raise AssertionError('Could not determine ldflags!')
-
-
-def _print_cmd(env, cmd):
+def _check_call(cmd, cwd, env):
     envparts = [
         '{}={}'.format(k, pipes.quote(v))
         for k, v in sorted(tuple(env.items()))
@@ -65,6 +25,7 @@ def _print_cmd(env, cmd):
         '$ {}'.format(' '.join(envparts + [pipes.quote(p) for p in cmd])),
         file=sys.stderr,
     )
+    subprocess.check_call(cmd, cwd=cwd, env=dict(os.environ, **env))
 
 
 @contextlib.contextmanager
@@ -106,25 +67,19 @@ def _get_build_extension_method(base, root):
             shutil.copytree('.', root_path)
             pkg_path = os.path.join(root_path, main_dir)
 
-            env = {
-                'GOPATH': tempdir,
-                'CGO_CFLAGS': _get_cflags(self.compiler),
-                'CGO_LDFLAGS': _get_ldflags(),
-            }
-            cmd_get = ('go', 'get')
-            _print_cmd(env, cmd_get)
-            subprocess.check_call(
-                cmd_get, cwd=pkg_path, env=dict(os.environ, **env),
-            )
+            env = {'GOPATH': tempdir}
+            cmd_get = ('go', 'get', '-d')
+            _check_call(cmd_get, cwd=pkg_path, env=env)
 
+            env.update({
+                'CGO_CFLAGS': _get_cflags(self.compiler),
+                'CGO_LDFLAGS': '-Wl,--unresolved-symbols=ignore-all',
+            })
             cmd_build = (
                 'go', 'build', '-buildmode=c-shared',
                 '-o', os.path.abspath(self.get_ext_fullpath(ext.name)),
             )
-            _print_cmd(env, cmd_build)
-            subprocess.check_call(
-                cmd_build, cwd=pkg_path, env=dict(os.environ, **env),
-            )
+            _check_call(cmd_build, cwd=pkg_path, env=env)
 
     return build_extension
 
