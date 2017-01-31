@@ -8,7 +8,7 @@ setup(
         'golang.'
     ),
     url='https://github.com/asottile/setuptools-golang',
-    version='0.1.0',
+    version='0.2.0',
     author='Anthony Sottile',
     author_email='asottile@umich.edu',
     classifiers=[
