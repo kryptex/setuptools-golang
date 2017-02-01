@@ -60,7 +60,7 @@ Double check that your import is correct.
 
 You've probably mistyped an import.  Double check that your import is correct.
 
-### Building manylinux wheels
+## Building manylinux wheels
 
 `setuptools-golang` also provides a tool for building
 [PEP 513](https://www.python.org/dev/peps/pep-0513/) manylinux1 wheels so your
