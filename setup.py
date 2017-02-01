@@ -24,6 +24,10 @@ setup(
     py_modules=['setuptools_golang'],
     install_requires=[],
     entry_points={
+        'console_scripts': [
+            'setuptools-golang-build-manylinux-wheels = '
+            'setuptools_golang:build_manylinux_wheels',
+        ],
         'distutils.setup_keywords': [
             'build_golang = setuptools_golang:set_build_ext',
         ],

@@ -95,3 +95,44 @@ def set_build_ext(dist, attr, value):
     root = value['root']
     base = dist.cmdclass.get('build_ext', _build_ext)
     dist.cmdclass['build_ext'] = _get_build_ext_cls(base, root)
+
+
+GOLANG = 'https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz'
+WHEEL_ARGS = '--no-deps --wheel-dir /tmp /dist/*.tar.gz'
+
+
+def build_manylinux_wheels(argv=None):  # pragma: no cover
+    assert os.path.exists('setup.py')
+    shutil.rmtree('dist')
+    os.makedirs('dist')
+    _check_call(('python', 'setup.py', 'sdist'), cwd='.', env={})
+    _check_call(
+        (
+            'docker', 'run',
+            '--volume', '{}:/dist:rw'.format(os.path.abspath('dist')),
+            # I'd use --user, but this breaks git:
+            # http://stackoverflow.com/a/20272540/812183
+            '--env', 'UID={}'.format(os.getuid()),
+            '--env', 'GID={}'.format(os.getgid()),
+            'quay.io/pypa/manylinux1_x86_64:latest',
+            'bash', '-exc',
+            'cd /tmp\n'
+            'wget {golang} -q --no-check-certificate -O /tmp/golang.tar.gz\n'
+            'tar -xf /tmp/golang.tar.gz\n'
+            'export GOROOT=/tmp/go\n'
+            'export PATH="$GOROOT/bin:$PATH"\n'
+            '/opt/python/cp27-cp27mu/bin/pip wheel {wheel_args}\n'
+            '/opt/python/cp34-cp34m/bin/pip wheel {wheel_args}\n'
+            '/opt/python/cp35-cp35m/bin/pip wheel {wheel_args}\n'
+            '/opt/python/cp36-cp36m/bin/pip wheel {wheel_args}\n'
+            'mkdir /tmp/whls\n'
+            'ls *.whl | xargs -n1 --verbose auditwheel repair -w /tmp/whls\n'
+            'cp /tmp/whls/* /dist\n'
+            'chown "$UID:$GID" /dist/*\n'
+            'ls /dist -al\n'.format(golang=GOLANG, wheel_args=WHEEL_ARGS),
+        ),
+        cwd='.', env={},
+    )
+    print('*' * 79)
+    print('Your wheels have been built into ./dist')
+    print('*' * 79)
