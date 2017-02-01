@@ -59,3 +59,31 @@ Double check that your import is correct.
 ### `package github.com/a/b/c: /tmp/.../github.com/a/b exists but /tmp/.../github.com/a/b/.git does not - stale checkout?`
 
 You've probably mistyped an import.  Double check that your import is correct.
+
+### Building manylinux wheels
+
+`setuptools-golang` also provides a tool for building
+[PEP 513](https://www.python.org/dev/peps/pep-0513/) manylinux1 wheels so your
+consumers don't need to have a go compiler installed to use your library.
+
+Simply run `setuptools-golang-build-manylinux-wheels` from your source
+directory.  The resulting wheels will end up in `./dist`.
+
+```
+$ setuptools-golang-build-manylinux-wheels
+
+...
+
++ ls /dist -al
+total 8092
+drwxrwxr-x  2 1000 1000    4096 Feb  1 04:16 .
+drwxr-xr-x 41 root root    4096 Feb  1 04:15 ..
+-rw-r--r--  1 1000 1000 2065095 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp27-cp27mu-manylinux1_x86_64.whl
+-rw-r--r--  1 1000 1000 2063299 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp34-cp34m-manylinux1_x86_64.whl
+-rw-r--r--  1 1000 1000 2064862 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp35-cp35m-manylinux1_x86_64.whl
+-rw-r--r--  1 1000 1000 2064873 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp36-cp36m-manylinux1_x86_64.whl
+-rw-rw-r--  1 1000 1000    4273 Feb  1 04:14 setuptools-golang-examples-0.1.1.tar.gz
+*******************************************************************************
+Your wheels have been built into ./dist
+*******************************************************************************
+```
