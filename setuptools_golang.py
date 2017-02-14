@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import contextlib
+import io
 import os
 import pipes
 import shutil
@@ -12,8 +13,45 @@ import tempfile
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
+@contextlib.contextmanager
+def _tmpdir():
+    tempdir = tempfile.mkdtemp()
+    try:
+        yield tempdir
+    finally:
+        shutil.rmtree(tempdir)
+
+
 def _get_cflags(compiler):
     return ' '.join('-I{}'.format(p) for p in compiler.include_dirs)
+
+
+LFLAG_CLANG = '-Wl,-undefined,dynamic_lookup'
+LFLAG_GCC = '-Wl,--unresolved-symbols=ignore-all'
+LFLAGS = (LFLAG_CLANG, LFLAG_GCC)
+
+
+def _get_ldflags():
+    """Determine the correct link flags.  This attempts dummy compiles similar
+    to how autotools does feature detection.
+    """
+    cc = subprocess.check_output(('go', 'env', 'CC')).decode('UTF-8').strip()
+
+    with _tmpdir() as tmpdir:
+        testf = os.path.join(tmpdir, 'test.c')
+        with io.open(testf, 'w') as f:
+            f.write('int f(int); int main(void) { return f(0); }\n')
+
+        for lflag in LFLAGS:  # pragma: no cover (platform specific)
+            try:
+                subprocess.check_call((cc, testf, lflag), cwd=tmpdir)
+                return lflag
+            except subprocess.CalledProcessError:
+                pass
+        else:  # pragma: no cover (platform specific)
+            # wellp, none of them worked, fall back to gcc and they'll get a
+            # hopefully reasonable error message
+            return LFLAG_GCC
 
 
 def _check_call(cmd, cwd, env):
@@ -26,15 +64,6 @@ def _check_call(cmd, cwd, env):
         file=sys.stderr,
     )
     subprocess.check_call(cmd, cwd=cwd, env=dict(os.environ, **env))
-
-
-@contextlib.contextmanager
-def _tmpdir():
-    tempdir = tempfile.mkdtemp()
-    try:
-        yield tempdir
-    finally:
-        shutil.rmtree(tempdir)
 
 
 def _get_build_extension_method(base, root):
@@ -73,7 +102,7 @@ def _get_build_extension_method(base, root):
 
             env.update({
                 'CGO_CFLAGS': _get_cflags(self.compiler),
-                'CGO_LDFLAGS': '-Wl,--unresolved-symbols=ignore-all',
+                'CGO_LDFLAGS': _get_ldflags(),
             })
             cmd_build = (
                 'go', 'build', '-buildmode=c-shared',
