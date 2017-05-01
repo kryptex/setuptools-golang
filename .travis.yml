@@ -1,5 +1,4 @@
 language: python
-sudo: false
 matrix:
     include:
         -   env: TOXENV=py27 GO=1.6
@@ -14,7 +13,7 @@ install:
     - eval "$(gimme $GO)"
     - pip install coveralls tox
 script: tox
-after_success: coveralls
+after_success: TOP=. coveralls
 cache:
     directories:
         - $HOME/.cache/pip
