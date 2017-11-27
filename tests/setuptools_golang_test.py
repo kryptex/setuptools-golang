@@ -26,8 +26,8 @@ def run(*cmd, **kwargs):
     returncode = kwargs.pop('returncode', 0)
     proc = subprocess.Popen(cmd, **kwargs)
     out, err = proc.communicate()
-    out = out.decode('UTF-8') if out is not None else None
-    err = err.decode('UTF-8') if err is not None else None
+    out = out.decode('UTF-8').replace('\r', '') if out is not None else None
+    err = err.decode('UTF-8').replace('\r', '') if err is not None else None
     if returncode is not None:
         if proc.returncode != returncode:
             raise AssertionError(
@@ -56,9 +56,10 @@ def venv(tmpdir_factory):
     """A shared virtualenv fixture, be careful not to install two of the same
     package into this -- or sadness...
     """
+    bin = 'Scripts' if sys.platform == 'win32' else 'bin'
     venv = tmpdir_factory.mktemp('venv').join('venv')
-    pip = venv.join('bin/pip').strpath
-    python = venv.join('bin/python').strpath
+    pip = venv.join(bin, 'pip').strpath
+    python = venv.join(bin, 'python').strpath
     # Make sure this virtualenv has the same executable
     run('virtualenv', venv.strpath, '-p', sys.executable)
     # Install this so we can get coverage
@@ -74,9 +75,9 @@ SUM = 'import {0}; print({0}.sum(1, 2))'
 @pytest.mark.parametrize(
     ('pkg', 'mod'),
     (
-        ('testing/sum', 'sum'),
-        ('testing/sum_pure_go', 'sum_pure_go'),
-        ('testing/sum_sub_package', 'sum_sub_package.sum'),
+        (os.path.join('testing', 'sum'), 'sum'),
+        (os.path.join('testing', 'sum_pure_go'), 'sum_pure_go'),
+        (os.path.join('testing', 'sum_sub_package'), 'sum_sub_package.sum'),
     ),
 )
 def test_sum_integration(venv, pkg, mod):
@@ -90,7 +91,8 @@ HELLO_WORLD = 'import project_with_c; print(project_with_c.hello_world())'
 
 def test_integration_project_with_c(venv):
     test_sum_integration(
-        venv, 'testing/project_with_c', 'project_with_c_sum.sum',
+        venv,
+        os.path.join('testing', 'project_with_c'), 'project_with_c_sum.sum',
     )
     out = run_output(venv.python, '-c', HELLO_WORLD)
     assert out == 'hello world\n'
@@ -100,14 +102,14 @@ RED = 'import red; print(red.red(u"ohai"))'
 
 
 def test_integration_imports_gh(venv):
-    run(venv.pip, 'install', 'testing/imports_gh')
+    run(venv.pip, 'install', os.path.join('testing', 'imports_gh'))
     out = run_output(venv.python, '-c', RED)
     assert out == '\x1b[31mohai\x1b[0m\n'
 
 
 def test_integration_notfound(venv):
     ret = run(
-        venv.pip, 'install', 'testing/notfound',
+        venv.pip, 'install', os.path.join('testing', 'notfound'),
         returncode=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
     assert ret.returncode != 0
@@ -119,7 +121,7 @@ def test_integration_notfound(venv):
 
 def test_integration_multidir(venv):
     ret = run(
-        venv.pip, 'install', 'testing/multidir',
+        venv.pip, 'install', os.path.join('testing', 'multidir'),
         returncode=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
     assert ret.returncode != 0
@@ -133,6 +135,6 @@ OHAI = 'import hello_lib; print(hello_lib.ohai(u"Anthony"))'
 
 
 def test_integration_internal_imports(venv):
-    run(venv.pip, 'install', 'testing/internal_imports')
+    run(venv.pip, 'install', os.path.join('testing', 'internal_imports'))
     out = run_output(venv.python, '-c', OHAI)
     assert out == 'ohai, Anthony\n'

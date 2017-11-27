@@ -1,0 +1,19 @@
+environment:
+    matrix:
+    -   PYTHON: 'C:\Python27'
+    -   PYTHON: 'C:\Python36'
+
+install:
+-   'SET PATH=%PYTHON%;%PYTHON%\Scripts;C:\MinGW\bin;C:\go-src\bin;%PATH%'
+-   'SET GOROOT=C:\go-src'
+-   'SET GOROOT_BOOTSTRAP=C:\go19-x86'
+-   'git clone --branch=go1.10beta1 --depth=1 https://github.com/golang/go C:\go-src'
+-   'cd C:\go-src\src && make.bat'
+-   'pip install pytest'
+
+# Not a C# project
+build: false
+
+test_script: pytest tests
+
+cache: '%LOCALAPPDATA%\pip\cache'
