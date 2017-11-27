@@ -13,7 +13,7 @@ import setuptools_golang
 
 @pytest.fixture(autouse=True, scope='session')
 def enable_coverage_subprocesses():
-    here = os.path.dirname(os.path.abspath(__file__))
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.environ['TOP'] = here
     os.environ['COVERAGE_PROCESS_START'] = os.path.join(here, '.coveragerc')
 
