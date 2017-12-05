@@ -60,6 +60,19 @@ Double check that your import is correct.
 
 You've probably mistyped an import.  Double check that your import is correct.
 
+### `duplicate symbol _XXX in: _cgo_export.o mod.cgo2.o`
+
+For example:
+```
+# github.com/asottile/dockerfile/pylib
+duplicate symbol _PyDockerfile_GoParseError in:
+    $WORK/github.com/asottile/dockerfile/pylib/_obj/_cgo_export.o
+    $WORK/github.com/asottile/dockerfile/pylib/_obj/main.cgo2.o
+```
+
+Make sure to mark global variables defined in C as `extern`.
+[Here's an example PR](https://github.com/asottile/dockerfile/pull/8)
+
 ## Building manylinux wheels
 
 `setuptools-golang` also provides a tool for building
