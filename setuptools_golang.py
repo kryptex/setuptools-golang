@@ -132,7 +132,8 @@ WHEEL_ARGS = '--no-deps --wheel-dir /tmp /dist/*.tar.gz'
 
 def build_manylinux_wheels(argv=None):  # pragma: no cover
     assert os.path.exists('setup.py')
-    shutil.rmtree('dist')
+    if os.path.exists('dist'):
+        shutil.rmtree('dist')
     os.makedirs('dist')
     _check_call(('python', 'setup.py', 'sdist'), cwd='.', env={})
     _check_call(
