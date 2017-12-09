@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/asottile/setuptools-golang.svg?branch=master)](https://travis-ci.org/asottile/setuptools-golang)
+[![Build status](https://ci.appveyor.com/api/projects/status/j4i2pc4o7pby3wdn/branch/master?svg=true)](https://ci.appveyor.com/project/asottile/setuptools-golang/branch/master)
 [![Coverage Status](https://img.shields.io/coveralls/asottile/setuptools-golang.svg?branch=master)](https://coveralls.io/r/asottile/setuptools-golang)
 
 setuptools-golang
@@ -12,6 +13,12 @@ This requires golang >= 1.5.  It is currently tested against 1.6 and 1.7.
 
 This requires python >= 2.7.  It is currently tested against 2.7, 3.5, 3.6,
 and pypy.
+
+## Platform Support
+
+- linux
+- macos
+- win32 (32 bit cpython, 32 bit go 1.10+)
 
 ## Usage
 

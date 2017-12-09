@@ -2,10 +2,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import contextlib
+import copy
 import io
 import os
 import pipes
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -19,11 +21,16 @@ def _tmpdir():
     try:
         yield tempdir
     finally:
-        shutil.rmtree(tempdir)
+        def err(action, name, exc):  # pragma: no cover (windows)
+            """windows: can't remove readonly files, make them writeable!"""
+            os.chmod(name, stat.S_IWRITE)
+            action(name)
+
+        shutil.rmtree(tempdir, onerror=err)
 
 
 def _get_cflags(compiler):
-    return ' '.join('-I{}'.format(p) for p in compiler.include_dirs)
+    return str(' ').join(str('-I{}').format(p) for p in compiler.include_dirs)
 
 
 LFLAG_CLANG = '-Wl,-undefined,dynamic_lookup'
@@ -35,6 +42,12 @@ def _get_ldflags():
     """Determine the correct link flags.  This attempts dummy compiles similar
     to how autotools does feature detection.
     """
+    # windows gcc does not support linking with unresolved symbols
+    if sys.platform == 'win32':  # pragma: no cover (windows)
+        prefix = getattr(sys, 'real_prefix', sys.prefix)
+        libs = os.path.join(prefix, str('libs'))
+        return str('-L{} -lpython{}{}').format(libs, *sys.version_info[:2])
+
     cc = subprocess.check_output(('go', 'env', 'CC')).decode('UTF-8').strip()
 
     with _tmpdir() as tmpdir:
@@ -75,7 +88,13 @@ def _get_build_extension_method(base, root):
 
         # If there are no .go files then the parent should handle this
         if not any(source.endswith('.go') for source in ext.sources):
-            return base.build_extension(self, ext)
+            # the base class may mutate `self.compiler`
+            compiler = copy.deepcopy(self.compiler)
+            self.compiler, compiler = compiler, self.compiler
+            try:
+                return base.build_extension(self, ext)
+            finally:
+                self.compiler, compiler = compiler, self.compiler
 
         if len(ext.sources) != 1:
             _raise_error(
@@ -96,13 +115,13 @@ def _get_build_extension_method(base, root):
             shutil.copytree('.', root_path)
             pkg_path = os.path.join(root_path, main_dir)
 
-            env = {'GOPATH': tempdir}
+            env = {str('GOPATH'): tempdir}
             cmd_get = ('go', 'get', '-d')
             _check_call(cmd_get, cwd=pkg_path, env=env)
 
             env.update({
-                'CGO_CFLAGS': _get_cflags(self.compiler),
-                'CGO_LDFLAGS': _get_ldflags(),
+                str('CGO_CFLAGS'): _get_cflags(self.compiler),
+                str('CGO_LDFLAGS'): _get_ldflags(),
             })
             cmd_build = (
                 'go', 'build', '-buildmode=c-shared',
