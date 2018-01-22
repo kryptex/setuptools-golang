@@ -51,7 +51,7 @@ def test_sets_cmdclass():
     assert dist.cmdclass['build_ext']
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def venv(tmpdir_factory):
     """A shared virtualenv fixture, be careful not to install two of the same
     package into this -- or sadness...
