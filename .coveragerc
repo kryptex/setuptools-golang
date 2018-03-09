@@ -6,7 +6,7 @@ data_file = $TOP/.coverage
 omit =
     .tox/*
     /usr/*
-    setup.py
+    */setup.py
 
 [report]
 exclude_lines =
