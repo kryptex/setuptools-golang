@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import argparse
 import contextlib
 import copy
 import io
@@ -145,11 +146,36 @@ def set_build_ext(dist, attr, value):
     dist.cmdclass['build_ext'] = _get_build_ext_cls(base, root)
 
 
-GOLANG = 'https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz'
-WHEEL_ARGS = '--no-deps --wheel-dir /tmp /dist/*.tar.gz'
+GOLANG = 'https://storage.googleapis.com/golang/go{}.linux-amd64.tar.gz'
+SCRIPT = '''\
+cd /tmp
+curl {golang} --silent --location | tar -xz
+# TODO: GOROOT is only needed for go<=1.8
+export GOROOT=/tmp/go
+export PATH="$GOROOT/bin:$PATH"
+for py in {pythons}; do
+    "/opt/python/$py/bin/pip" wheel --no-deps --wheel-dir /tmp /dist/*.tar.gz
+done
+ls *.whl | xargs -n1 --verbose auditwheel repair --wheel-dir /dist
+ls -al /dist
+'''
 
 
 def build_manylinux_wheels(argv=None):  # pragma: no cover
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--golang', default='1.10',
+        help='Override golang version (default %(default)s)',
+    )
+    parser.add_argument(
+        '--pythons', default='cp27-cp27mu,cp35-cp35m,cp36-cp36m',
+        help='Override pythons to build (default %(default)s)',
+    )
+    args = parser.parse_args(argv)
+
+    golang = GOLANG.format(args.golang)
+    pythons = ' '.join(args.pythons.split(','))
+
     assert os.path.exists('setup.py')
     if os.path.exists('dist'):
         shutil.rmtree('dist')
@@ -157,28 +183,12 @@ def build_manylinux_wheels(argv=None):  # pragma: no cover
     _check_call(('python', 'setup.py', 'sdist'), cwd='.', env={})
     _check_call(
         (
-            'docker', 'run',
+            'docker', 'run', '--rm',
             '--volume', '{}:/dist:rw'.format(os.path.abspath('dist')),
-            # I'd use --user, but this breaks git:
-            # http://stackoverflow.com/a/20272540/812183
-            '--env', 'UID={}'.format(os.getuid()),
-            '--env', 'GID={}'.format(os.getgid()),
+            '--user', '{}:{}'.format(os.getuid(), os.getgid()),
             'quay.io/pypa/manylinux1_x86_64:latest',
-            'bash', '-exc',
-            'cd /tmp\n'
-            'wget {golang} -q --no-check-certificate -O /tmp/golang.tar.gz\n'
-            'tar -xf /tmp/golang.tar.gz\n'
-            'export GOROOT=/tmp/go\n'
-            'export PATH="$GOROOT/bin:$PATH"\n'
-            '/opt/python/cp27-cp27mu/bin/pip wheel {wheel_args}\n'
-            '/opt/python/cp34-cp34m/bin/pip wheel {wheel_args}\n'
-            '/opt/python/cp35-cp35m/bin/pip wheel {wheel_args}\n'
-            '/opt/python/cp36-cp36m/bin/pip wheel {wheel_args}\n'
-            'mkdir /tmp/whls\n'
-            'ls *.whl | xargs -n1 --verbose auditwheel repair -w /tmp/whls\n'
-            'cp /tmp/whls/* /dist\n'
-            'chown "$UID:$GID" /dist/*\n'
-            'ls /dist -al\n'.format(golang=GOLANG, wheel_args=WHEEL_ARGS),
+            'bash', '-o', 'pipefail', '-euxc',
+            SCRIPT.format(golang=golang, pythons=pythons),
         ),
         cwd='.', env={},
     )
