@@ -4,11 +4,8 @@ environment:
     -   PYTHON: 'C:\Python36'
 
 install:
--   'SET PATH=%PYTHON%;%PYTHON%\Scripts;C:\MinGW\bin;C:\go-src\bin;%PATH%'
--   'SET GOROOT=C:\go-src'
--   'SET GOROOT_BOOTSTRAP=C:\go19-x86'
--   'git clone --branch=go1.10beta1 --depth=1 https://github.com/golang/go C:\go-src'
--   'cd C:\go-src\src && make.bat'
+-   'SET PATH=%PYTHON%;%PYTHON%\Scripts;C:\MinGW\bin;C:\go110-x86\bin;%PATH%'
+-   'SET GOROOT=C:\go110-x86'
 -   'pip install pytest'
 
 # Not a C# project
