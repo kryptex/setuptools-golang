@@ -138,3 +138,8 @@ def test_integration_internal_imports(venv):
     run(venv.pip, 'install', os.path.join('testing', 'internal_imports'))
     out = run_output(venv.python, '-c', OHAI)
     assert out == 'ohai, Anthony\n'
+
+
+def test_regression_dangling_symlink(venv):
+    # this raises an error because of a dangling symlink
+    run(venv.pip, 'install', os.path.join('testing', 'dangling_symlink'))
