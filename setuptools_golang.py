@@ -150,8 +150,6 @@ GOLANG = 'https://storage.googleapis.com/golang/go{}.linux-amd64.tar.gz'
 SCRIPT = '''\
 cd /tmp
 curl {golang} --silent --location | tar -xz
-# TODO: GOROOT is only needed for go<=1.8
-export GOROOT=/tmp/go
 export PATH="$GOROOT/bin:$PATH"
 for py in {pythons}; do
     "/opt/python/$py/bin/pip" wheel --no-deps --wheel-dir /tmp /dist/*.tar.gz
@@ -164,7 +162,7 @@ ls -al /dist
 def build_manylinux_wheels(argv=None):  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--golang', default='1.10',
+        '--golang', default='1.11',
         help='Override golang version (default %(default)s)',
     )
     parser.add_argument(
