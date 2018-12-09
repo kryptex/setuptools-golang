@@ -150,7 +150,7 @@ GOLANG = 'https://storage.googleapis.com/golang/go{}.linux-amd64.tar.gz'
 SCRIPT = '''\
 cd /tmp
 curl {golang} --silent --location | tar -xz
-export PATH="$GOROOT/bin:$PATH"
+export PATH="/tmp/go/bin:$PATH"
 for py in {pythons}; do
     "/opt/python/$py/bin/pip" wheel --no-deps --wheel-dir /tmp /dist/*.tar.gz
 done
