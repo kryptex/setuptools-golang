@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/asottile/setuptools-golang.svg?branch=master)](https://travis-ci.org/asottile/setuptools-golang)
+[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.setuptools-golang?branchName=master)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=52&branchName=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/j4i2pc4o7pby3wdn/branch/master?svg=true)](https://ci.appveyor.com/project/asottile/setuptools-golang/branch/master)
-[![Coverage Status](https://img.shields.io/coveralls/asottile/setuptools-golang.svg?branch=master)](https://coveralls.io/r/asottile/setuptools-golang)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/52/master.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=52&branchName=master)
 
 setuptools-golang
 =================

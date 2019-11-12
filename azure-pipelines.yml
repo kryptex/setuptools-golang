@@ -1,0 +1,34 @@
+trigger:
+  branches:
+    include: [master, test-me-*]
+  tags:
+    include: ['*']
+
+resources:
+  repositories:
+    - repository: asottile
+      type: github
+      endpoint: github
+      name: asottile/azure-pipeline-templates
+      ref: refs/tags/v1.0.0
+
+jobs:
+- template: job--pre-commit.yml@asottile
+- template: job--python-tox.yml@asottile
+  parameters:
+    toxenvs: [py38]
+    os: linux
+    name_postfix: _go_1_12
+    pre_test:
+    - task: GoTool@0
+      inputs:
+        version: '1.12'
+- template: job--python-tox.yml@asottile
+  parameters:
+    toxenvs: [pypy, pypy3, py27, py36, py37, py38]
+    os: linux
+    name_postfix: _go_1_13
+    pre_test:
+    - task: GoTool@0
+      inputs:
+        version: '1.13'

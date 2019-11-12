@@ -1,8 +1,8 @@
 [run]
 parallel = True
 branch = True
-source = $TOP
-data_file = $TOP/.coverage
+source = $PWD
+data_file = $PWD/.coverage
 omit =
     .tox/*
     /usr/*
