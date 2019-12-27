@@ -12,12 +12,12 @@ A setuptools extension for building cpython extensions written in golang.
 This requires golang >= 1.5.  It is currently tested against 1.10 and 1.11.
 
 This requires python >= 2.7.  It is currently tested against 2.7, 3.6, 3.7,
-and pypy.
+3.8, and pypy.
 
 ## Platform Support
 
 - linux
-- macos
+- macOS
 - win32 (32 bit cpython, 32 bit go 1.10+)
 
 ## Usage
