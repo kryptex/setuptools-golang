@@ -30,8 +30,14 @@ def _tmpdir():
         shutil.rmtree(tempdir, onerror=err)
 
 
-def _get_cflags(compiler):
-    return str(' ').join(str('-I{}').format(p) for p in compiler.include_dirs)
+def _get_cflags(compiler, macros):
+    args = [str('-I{}').format(p) for p in compiler.include_dirs]
+    for macro_name, macro_value in macros:
+        if macro_value is None:
+            args.append(str('-D{}').format(macro_name))
+        else:
+            args.append(str('-D{}={}').format(macro_name, macro_value))
+    return str(' ').join(args)
 
 
 LFLAG_CLANG = '-Wl,-undefined,dynamic_lookup'
@@ -121,7 +127,9 @@ def _get_build_extension_method(base, root):
             _check_call(cmd_get, cwd=pkg_path, env=env)
 
             env.update({
-                str('CGO_CFLAGS'): _get_cflags(self.compiler),
+                str('CGO_CFLAGS'): _get_cflags(
+                    self.compiler, ext.define_macros or (),
+                ),
                 str('CGO_LDFLAGS'): _get_ldflags(),
             })
             cmd_build = (
