@@ -188,11 +188,11 @@ def build_manylinux_wheels(
 ) -> int:  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--golang', default='1.12',
+        '--golang', default='1.13.8',
         help='Override golang version (default %(default)s)',
     )
     parser.add_argument(
-        '--pythons', default='cp27-cp27mu,cp36-cp36m,cp37-cp37m,cp38-cp38',
+        '--pythons', default='cp36-cp36m,cp37-cp37m,cp38-cp38',
         help='Override pythons to build (default %(default)s)',
     )
     args = parser.parse_args(argv)

@@ -11,8 +11,7 @@ A setuptools extension for building cpython extensions written in golang.
 
 This requires golang >= 1.5.  It is currently tested against 1.10 and 1.11.
 
-This requires python >= 2.7.  It is currently tested against python2,
-python3, and pypy.
+This requires python >= 3.6.  It is currently tested against python3 and pypy3.
 
 ## Platform Support
 
@@ -98,7 +97,6 @@ $ setuptools-golang-build-manylinux-wheels
 total 8092
 drwxrwxr-x  2 1000 1000    4096 Feb  1 04:16 .
 drwxr-xr-x 41 root root    4096 Feb  1 04:15 ..
--rw-r--r--  1 1000 1000 2065095 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp27-cp27mu-manylinux1_x86_64.whl
 -rw-r--r--  1 1000 1000 2063299 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp34-cp34m-manylinux1_x86_64.whl
 -rw-r--r--  1 1000 1000 2064862 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp35-cp35m-manylinux1_x86_64.whl
 -rw-r--r--  1 1000 1000 2064873 Feb  1 04:16 setuptools_golang_examples-0.1.1-cp36-cp36m-manylinux1_x86_64.whl
