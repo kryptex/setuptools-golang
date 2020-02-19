@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import collections
 import os
 import subprocess
@@ -30,9 +28,8 @@ def run(*cmd, **kwargs):
     if returncode is not None:
         if proc.returncode != returncode:
             raise AssertionError(
-                '{!r} returned {} (expected {})\nout:\n{}\nerr:\n{}\n'.format(
-                    cmd, proc.returncode, returncode, out, err,
-                )
+                f'{cmd!r} returned {proc.returncode} (expected {returncode})\n'
+                f'out:\n{out}\nerr:\n{err}\n',
             )
     return auto_namedtuple(returncode=proc.returncode, out=out, err=err)
 
