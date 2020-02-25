@@ -208,7 +208,7 @@ def build_manylinux_wheels(
     _check_call(
         (
             'docker', 'run', '--rm',
-            '--volume', f'{os.path.abspath("dist")}:/dist:rw'
+            '--volume', f'{os.path.abspath("dist")}:/dist:rw',
             '--user', f'{os.getuid()}:{os.getgid()}',
             'quay.io/pypa/manylinux1_x86_64:latest',
             'bash', '-o', 'pipefail', '-euxc',
