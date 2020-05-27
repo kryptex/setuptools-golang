@@ -1,3 +1,2 @@
 coverage-enable-subprocess
-pre-commit
 pytest
