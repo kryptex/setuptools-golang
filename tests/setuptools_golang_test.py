@@ -103,6 +103,15 @@ def test_integration_imports_gh(venv):
     assert out == '\x1b[0;31mohai\x1b[0m\n'
 
 
+GOMOD = 'import gomodules; gomodules.reversemsg()'
+
+
+def test_integration_gomodules(venv):
+    run(venv.pip, 'install', os.path.join('testing', 'gomodules'))
+    out = run_output(venv.python, '-c', GOMOD)
+    assert out == 'test example'
+
+
 def test_integration_notfound(venv):
     ret = run(
         venv.pip, 'install', os.path.join('testing', 'notfound'),
