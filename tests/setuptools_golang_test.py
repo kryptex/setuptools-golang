@@ -12,7 +12,7 @@ import setuptools_golang
 @pytest.fixture(autouse=True, scope='session')
 def enable_coverage_subprocesses():
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    os.environ['COVERAGE_PROCESS_START'] = os.path.join(here, '.coveragerc')
+    os.environ['COVERAGE_PROCESS_START'] = os.path.join(here, 'setup.cfg')
 
 
 def auto_namedtuple(**kwargs):
@@ -59,7 +59,7 @@ def venv(tmpdir_factory):
     # Make sure this virtualenv has the same executable
     run('virtualenv', venv.strpath, '-p', sys.executable)
     # Install this so we can get coverage
-    run(pip, 'install', 'coverage-enable-subprocess')
+    run(pip, 'install', 'covdefaults>=1.2.0', 'coverage-enable-subprocess')
     # Install us!
     run(pip, 'install', '-e', '.')
     yield auto_namedtuple(venv=venv, pip=pip, python=python)

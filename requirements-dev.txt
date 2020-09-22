@@ -1,2 +1,3 @@
+covdefaults>=1.2.0
 coverage-enable-subprocess
 pytest
