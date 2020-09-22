@@ -100,7 +100,7 @@ RED = 'import red; print(red.red(u"ohai"))'
 def test_integration_imports_gh(venv):
     run(venv.pip, 'install', os.path.join('testing', 'imports_gh'))
     out = run_output(venv.python, '-c', RED)
-    assert out == '\x1b[31mohai\x1b[0m\n'
+    assert out == '\x1b[0;31mohai\x1b[0m\n'
 
 
 def test_integration_notfound(venv):
