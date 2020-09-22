@@ -1,5 +1,6 @@
 import collections
 import os
+import shlex
 import subprocess
 import sys
 
@@ -143,6 +144,21 @@ def test_integration_internal_imports(venv):
     run(venv.pip, 'install', os.path.join('testing', 'internal_imports'))
     out = run_output(venv.python, '-c', OHAI)
     assert out == 'ohai, Anthony\n'
+
+
+def test_integration_user_gopath(venv, tmpdir):
+    testdir = os.path.join('testing', 'gomodules')
+
+    gopath = str(tmpdir.join('gopath'))
+    env = {**os.environ, 'SETUPTOOLS_GOLANG_GOPATH': gopath}
+    ret = run(
+        venv.pip, 'install', '-v', testdir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+
+    assert f"$ GOPATH={shlex.quote(gopath)} go get -d" in ret.out
 
 
 def test_integration_defines(venv):
