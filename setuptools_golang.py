@@ -1,6 +1,7 @@
 import argparse
 import contextlib
 import copy
+import errno
 import os
 import shlex
 import shutil
@@ -10,6 +11,8 @@ import sys
 import tempfile
 from distutils.ccompiler import CCompiler
 from distutils.dist import Distribution
+from types import TracebackType
+from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Generator
@@ -22,22 +25,33 @@ from setuptools import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
+def rmtree(path: str) -> None:
+    """Newer golang uses readonly dirs & files for module cache."""
+    def handle_remove_readonly(
+            func: Callable[..., Any],
+            path: str,
+            exc: Tuple[Type[OSError], OSError, TracebackType],
+    ) -> None:
+        excvalue = exc[1]
+        if (
+                func in (os.rmdir, os.remove, os.unlink) and
+                excvalue.errno == errno.EACCES
+        ):
+            for p in (path, os.path.dirname(path)):
+                os.chmod(p, os.stat(p).st_mode | stat.S_IWUSR)
+            func(path)
+        else:
+            raise
+    shutil.rmtree(path, ignore_errors=False, onerror=handle_remove_readonly)
+
+
 @contextlib.contextmanager
 def _tmpdir() -> Generator[str, None, None]:
     tempdir = tempfile.mkdtemp()
     try:
         yield tempdir
     finally:
-        def err(
-                action: Callable[[str], None],
-                name: str,
-                exc: Exception,
-        ) -> None:  # pragma: no cover (windows)
-            """windows: can't remove readonly files, make them writeable!"""
-            os.chmod(name, stat.S_IWRITE)
-            action(name)
-
-        shutil.rmtree(tempdir, onerror=err)
+        rmtree(tempdir)
 
 
 def _get_cflags(
