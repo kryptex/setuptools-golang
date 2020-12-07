@@ -149,7 +149,8 @@ def _get_build_extension_method(
             shutil.copytree('.', root_path, symlinks=True)
             pkg_path = os.path.join(root_path, main_dir)
 
-            env = {'GOPATH': tempdir}
+            gopath = os.environ.get('SETUPTOOLS_GOLANG_GOPATH', tempdir)
+            env = {'GOPATH': gopath}
             cmd_get = ('go', 'get', '-d')
             _check_call(cmd_get, cwd=pkg_path, env=env)
 

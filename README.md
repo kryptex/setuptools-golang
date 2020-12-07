@@ -80,6 +80,17 @@ duplicate symbol _PyDockerfile_GoParseError in:
 Make sure to mark global variables defined in C as `extern`.
 [Here's an example PR](https://github.com/asottile/dockerfile/pull/8)
 
+### repeated rebuilds can be slow
+
+setuptools-golang attempts to make builds more repeatable by using a separate
+`GOPATH` -- if you'd like to reuse a GOPATH you can set the
+`SETUPTOOLS_GOLANG_GOPATH` environment variable:
+
+```console
+$ SETUPTOOLS_GOLANG_GOPATH=~/go pip install .
+...
+```
+
 ## Building manylinux wheels
 
 `setuptools-golang` also provides a tool for building
