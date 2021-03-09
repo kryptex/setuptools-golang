@@ -1,11 +1,5 @@
 #include <Python.h>
 
-#if PY_MAJOR_VERSION >= 3
-#define PyHelloLib_Bytes_AS_STRING PyBytes_AS_STRING
-#else
-#define PyHelloLib_Bytes_AS_STRING PyString_AS_STRING
-#endif
-
 /* Will come from go */
 PyObject* ohai(PyObject*);
 
@@ -20,7 +14,7 @@ void PyHelloLib_DECREF(PyObject* obj) {
 }
 
 const char* PyHelloLib_Bytes_AsString(PyObject* s) {
-    return PyHelloLib_Bytes_AS_STRING(s);
+    return PyBytes_AS_STRING(s);
 }
 
 static struct PyMethodDef methods[] = {
@@ -28,7 +22,6 @@ static struct PyMethodDef methods[] = {
     {NULL, NULL}
 };
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef module = {
     PyModuleDef_HEAD_INIT,
     "hello_lib",
@@ -40,8 +33,3 @@ static struct PyModuleDef module = {
 PyMODINIT_FUNC PyInit_hello_lib(void) {
     return PyModule_Create(&module);
 }
-#else
-PyMODINIT_FUNC inithello_lib(void) {
-    Py_InitModule3("hello_lib", methods, NULL);
-}
-#endif
