@@ -16,7 +16,6 @@ static struct PyMethodDef methods[] = {
 };
 #endif
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef module = {
     PyModuleDef_HEAD_INIT,
     "sum",
@@ -28,8 +27,3 @@ static struct PyModuleDef module = {
 PyMODINIT_FUNC PyInit_sum(void) {
     return PyModule_Create(&module);
 }
-#else
-PyMODINIT_FUNC initsum(void) {
-    Py_InitModule3("sum", methods, NULL);
-}
-#endif
