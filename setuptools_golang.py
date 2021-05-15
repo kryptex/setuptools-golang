@@ -74,7 +74,7 @@ LFLAGS = (LFLAG_CLANG, LFLAG_GCC)
 
 
 def _get_ldflags() -> str:
-    """Determine the correct link flags.  This attempts dummy compiles similar
+    """Determine the correct link flags.  This attempts compiles similar
     to how autotools does feature detection.
     """
     # windows gcc does not support linking with unresolved symbols
