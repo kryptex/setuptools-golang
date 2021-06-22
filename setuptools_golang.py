@@ -58,8 +58,7 @@ def _get_cflags(
         compiler: CCompiler,
         macros: Sequence[Tuple[str, Optional[str]]],
 ) -> str:
-    # https://github.com/python/typeshed/pull/3741
-    args = [f'-I{p}' for p in compiler.include_dirs]  # type: ignore
+    args = [f'-I{p}' for p in compiler.include_dirs]
     for macro_name, macro_value in macros:
         if macro_value is None:
             args.append(f'-D{macro_name}')
@@ -180,9 +179,8 @@ def set_build_ext(
         value: Dict[str, str],
 ) -> None:
     root = value['root']
-    # https://github.com/python/typeshed/pull/3742
-    base = dist.cmdclass.get('build_ext', _build_ext)  # type: ignore
-    dist.cmdclass['build_ext'] = _get_build_ext_cls(base, root)  # type: ignore
+    base = dist.cmdclass.get('build_ext', _build_ext)
+    dist.cmdclass['build_ext'] = _get_build_ext_cls(base, root)
 
 
 GOLANG = 'https://storage.googleapis.com/golang/go{}.linux-amd64.tar.gz'
