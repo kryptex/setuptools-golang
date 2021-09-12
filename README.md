@@ -10,7 +10,7 @@ A setuptools extension for building cpython extensions written in golang.
 
 ## Requirements
 
-This requires golang >= 1.5.  It is currently tested against 1.10 and 1.11.
+This requires golang >= 1.5.  It is currently tested against 1.16 and 1.17.
 
 This requires python >= 3.6.  It is currently tested against python3 and pypy3.
 
