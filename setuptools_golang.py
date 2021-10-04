@@ -215,7 +215,7 @@ def build_manylinux_wheels(
         help='Override golang version (default %(default)s)',
     )
     parser.add_argument(
-        '--pythons', default='cp36-cp36m,cp37-cp37m,cp38-cp38,cp39-cp39',
+        '--pythons', default='cp36-cp36m',
         help='Override pythons to build (default %(default)s)',
     )
     args = parser.parse_args(argv)
