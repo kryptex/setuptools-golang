@@ -77,7 +77,7 @@ def _get_ldflags() -> str:
     to how autotools does feature detection.
     """
     # windows gcc does not support linking with unresolved symbols
-    if sys.platform == 'win32':  # pragma: no cover (windows)
+    if sys.platform == 'win32':  # pragma: win32 cover
         prefix = getattr(sys, 'real_prefix', sys.prefix)
         libs = os.path.join(prefix, 'libs')
         return '-L{} -lpython{}{}'.format(libs, *sys.version_info[:2])
