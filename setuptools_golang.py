@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import contextlib
 import copy
@@ -14,12 +16,8 @@ from distutils.dist import Distribution
 from types import TracebackType
 from typing import Any
 from typing import Callable
-from typing import Dict
 from typing import Generator
-from typing import Optional
 from typing import Sequence
-from typing import Tuple
-from typing import Type
 
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
@@ -30,7 +28,7 @@ def rmtree(path: str) -> None:
     def handle_remove_readonly(
             func: Callable[..., Any],
             path: str,
-            exc: Tuple[Type[OSError], OSError, TracebackType],
+            exc: tuple[type[OSError], OSError, TracebackType],
     ) -> None:
         excvalue = exc[1]
         if (
@@ -56,7 +54,7 @@ def _tmpdir() -> Generator[str, None, None]:
 
 def _get_cflags(
         compiler: CCompiler,
-        macros: Sequence[Tuple[str, Optional[str]]],
+        macros: Sequence[tuple[str, str | None]],
 ) -> str:
     args = [f'-I{p}' for p in compiler.include_dirs]
     for macro_name, macro_value in macros:
@@ -101,7 +99,7 @@ def _get_ldflags() -> str:
             return LFLAG_GCC
 
 
-def _check_call(cmd: Tuple[str, ...], cwd: str, env: Dict[str, str]) -> None:
+def _check_call(cmd: tuple[str, ...], cwd: str, env: dict[str, str]) -> None:
     envparts = [f'{k}={shlex.quote(v)}' for k, v in sorted(tuple(env.items()))]
     print(
         '$ {}'.format(' '.join(envparts + [shlex.quote(p) for p in cmd])),
@@ -111,7 +109,7 @@ def _check_call(cmd: Tuple[str, ...], cwd: str, env: Dict[str, str]) -> None:
 
 
 def _get_build_extension_method(
-        base: Type[_build_ext],
+        base: type[_build_ext],
         root: str,
         strip: bool,
 ) -> Callable[[_build_ext, Extension], None]:
@@ -161,7 +159,7 @@ def _get_build_extension_method(
                 'CGO_LDFLAGS': _get_ldflags(),
             })
 
-            cmd_build: Tuple[str, ...] = (
+            cmd_build: tuple[str, ...] = (
                 'go', 'build', '-buildmode=c-shared',
                 '-o', os.path.abspath(self.get_ext_fullpath(ext.name)),
             )
@@ -176,10 +174,10 @@ def _get_build_extension_method(
 
 
 def _get_build_ext_cls(
-        base: Type[_build_ext],
+        base: type[_build_ext],
         root: str,
         strip: bool = True,
-) -> Type[_build_ext]:
+) -> type[_build_ext]:
     attrs = {'build_extension': _get_build_extension_method(base, root, strip)}
     return type('build_ext', (base,), attrs)
 
@@ -187,7 +185,7 @@ def _get_build_ext_cls(
 def set_build_ext(
         dist: Distribution,
         attr: str,
-        value: Dict[str, Any],
+        value: dict[str, Any],
 ) -> None:
     base = dist.cmdclass.get('build_ext', _build_ext)
     dist.cmdclass['build_ext'] = _get_build_ext_cls(base, **value)
@@ -207,7 +205,7 @@ ls -al /dist
 
 
 def build_manylinux_wheels(
-        argv: Optional[Sequence[str]] = None,
+        argv: Sequence[str] | None = None,
 ) -> int:  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -215,7 +213,7 @@ def build_manylinux_wheels(
         help='Override golang version (default %(default)s)',
     )
     parser.add_argument(
-        '--pythons', default='cp36-cp36m',
+        '--pythons', default='cp37-cp37m',
         help='Override pythons to build (default %(default)s)',
     )
     args = parser.parse_args(argv)
