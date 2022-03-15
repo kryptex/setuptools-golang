@@ -11,14 +11,14 @@ import stat
 import subprocess
 import sys
 import tempfile
-from distutils.ccompiler import CCompiler
-from distutils.dist import Distribution
 from types import TracebackType
 from typing import Any
 from typing import Callable
 from typing import Generator
 from typing import Sequence
 
+from distutils.ccompiler import CCompiler
+from distutils.dist import Distribution
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 
