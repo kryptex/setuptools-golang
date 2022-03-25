@@ -160,7 +160,7 @@ def test_integration_user_gopath(venv, tmpdir):
         stderr=subprocess.STDOUT,
     )
 
-    assert f"$ GOPATH={shlex.quote(gopath)} go get -d" in ret.out
+    assert f'$ GOPATH={shlex.quote(gopath)} go get -d' in ret.out
 
 
 def test_integration_defines(venv):
