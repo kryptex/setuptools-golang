@@ -1,5 +1,4 @@
-[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.setuptools-golang?branchName=main)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=52&branchName=main)
-[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/52/main.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=52&branchName=main)
+[![build status](https://github.com/asottile/setuptools-golang/actions/workflows/main.yml/badge.svg)](https://github.com/asottile/setuptools-golang/actions/workflows/main.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/asottile/setuptools-golang/main.svg)](https://results.pre-commit.ci/latest/github/asottile/setuptools-golang/main)
 
 setuptools-golang
@@ -9,7 +8,7 @@ A setuptools extension for building cpython extensions written in golang.
 
 ## Requirements
 
-This requires golang >= 1.5.  It is currently tested against 1.16 and 1.17.
+This requires golang >= 1.5.
 
 This requires python >= 3.7.  It is currently tested against python3 and pypy3.
 
