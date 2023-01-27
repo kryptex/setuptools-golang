@@ -49,7 +49,7 @@ def _tmpdir() -> Generator[str, None, None]:
     try:
         yield tempdir
     finally:
-        rmtree(tempdir)
+        pass # rmtree(tempdir)
 
 
 def _get_cflags(
